@@ -81,24 +81,26 @@ An Example Message:
 
 ## Research Topics
 
-* (4 points) Client-side cryptography with Web Crypto API
-    * I'm going to use `crypto.subtle` to implement ECDH (key exchange) and AES-GCM (encryption)
-    * This demonstrates secure message encryption/decryption entirely in the browser
-    * see [MDN Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API)
-* (2 points) Socket.io for real-time messaging
-    * I'm using Socket.io to enable instant message delivery without page refresh
-    * This creates a more responsive chat experience
-    * see [Socket.io Documentation](https://socket.io/docs/v4/)
-* (2 points) Tailwind CSS
-    * I'm using Tailwind for responsive layout and consistent styling
-    * Will customize the default theme for a unique look
-    * see [TailwindCSS Documentation](https://tailwindcss.com/docs)
 * (3 points) Unit testing with Jest
     * I'm using Jest to test encryption/decryption functions and database operations
     * Will include at least 4 unit tests
+    * Will link to testing code in repository and show screen capture of tests
     * see [Jest Testing Framework](https://jestjs.io/docs/getting-started)
+* (3 points) Socket.io for real-time messaging
+    * I'm using Socket.io (server-side library) to enable instant message delivery without page refresh
+    * This creates a more responsive chat experience similar to WhatsApp
+    * Will link to source code showing Socket.io integration
+    * see [Socket.io Documentation](https://socket.io/docs/v4/)
+* (2 points) Tailwind CSS
+    * I'm using Tailwind for responsive layout and consistent styling
+    * Will customize the default theme (not using stock configuration)
+    * see [TailwindCSS Documentation](https://tailwindcss.com/docs)
+* (3 points) Web Crypto API for client-side encryption
+    * I'm using Web Crypto API to implement ECDH key exchange and AES-GCM encryption
+    * This is a complex client-side cryptography implementation for end-to-end encryption
+    * Will link to encryption/decryption code and demonstrate working encrypted messaging
+    * see [MDN Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API)
 
-11 points total out of 10 required points
 
 ## [Link to Initial Main Project File](app.mjs) 
 
