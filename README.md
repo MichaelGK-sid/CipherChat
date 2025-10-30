@@ -1,117 +1,112 @@
-The content below is an example project proposal / requirements document. Replace the text below the lines marked "__TODO__" with details specific to your project. Remove the "TODO" lines.
 
-(__TODO__: your project name)
 
-# Shoppy Shoperson 
+# CipherChat
 
 ## Overview
 
-(__TODO__: a brief one or two paragraph, high-level description of your project)
+CipherChat is a small end-to-end encrypted (E2EE) web messaging application built using Express and MongoDB. It allows users to securely register, log in, and exchange encrypted messages with each other — similar in spirit to Signal or WhatsApp, but in a much smaller scope for demonstration purposes.
 
-Remembering what to buy at the grocery store is waaaaay too difficult. Also, shopping for groceries when you're hungry leads to regrettable purchases. Sooo... that's where Shoppy Shoperson comes in!
-
-Shoppy Shoperson is a web app that will allow users to keep track of multiple grocery lists. Users can register and login. Once they're logged in, they can create or view their grocery list. For every list that they have, they can add items to the list or cross off items.
-
+Each user generates a public/private key pair upon registration. When one user sends a message to another, the plaintext message is encrypted in the browser using a shared secret key derived via Elliptic-Curve Diffie–Hellman (ECDH), ensuring that messages are stored encrypted on the server. Only the recipient, possessing the matching private key, can decrypt and read the message.
 
 ## Data Model
 
-(__TODO__: a description of your application's data and their relationships to each other) 
+The application will store Users and Messages.
 
-The application will store Users, Lists and Items
-
-* users can have multiple lists (via references)
-* each list can have multiple items (by embedding)
-
-(__TODO__: sample documents)
+* Users can send and receive multiple messages (via references)
+* Each message references both a sender and recipient user
 
 An Example User:
-
 ```javascript
 {
-  username: "shannonshopper",
-  hash: // a password hash,
-  lists: // an array of references to List documents
+  username: "alice",
+  passwordHash: "<bcrypt hash>",
+  publicKey: "-----BEGIN PUBLIC KEY----- ...",
+  createdAt: ISODate("2025-10-29T10:00:00Z")
 }
 ```
 
-An Example List with Embedded Items:
-
+An Example Message:
 ```javascript
 {
-  user: // a reference to a User object
-  name: "Breakfast foods",
-  items: [
-    { name: "pancakes", quantity: "9876", checked: false},
-    { name: "ramen", quantity: "2", checked: true},
-  ],
-  createdAt: // timestamp
+  sender: // a reference to a User object
+  recipient: // a reference to a User object
+  ciphertext: "e3a2d91fa81c...",
+  iv: "f9c1c2b3a4d5e6f7a8b9c0d1",
+  timestamp: ISODate("2025-10-29T10:05:00Z")
 }
 ```
-
 
 ## [Link to Commented First Draft Schema](db.mjs) 
 
-(__TODO__: create a first draft of your Schemas in db.mjs and link to it)
-
 ## Wireframes
 
-(__TODO__: wireframes for all of the pages on your site; they can be as simple as photos of drawings or you can use a tool like Balsamiq, Omnigraffle, etc.)
+/register - page for user registration
 
-/list/create - page for creating a new shopping list
+![register](documentation/wireframes/register.jpg)
 
-![list create](documentation/list-create.png)
+/login - page for user login
 
-/list - page for showing all shopping lists
+![login](documentation/wireframes/login.jpg)
 
-![list](documentation/list.png)
+/home - page showing contact list
 
-/list/slug - page for showing specific shopping list
+![home](documentation/wireframes/home.jpg)
 
-![list](documentation/list-slug.png)
+/chat/:username - page for chatting with a specific user
+
+![chat](documentation/wireframes/chat.jpg)
+
+/profile - page for editing user profile
+
+![profile](documentation/wireframes/profile.jpg)
 
 ## Site map
-
-(__TODO__: draw out a site map that shows how pages are related to each other)
-
-Here's a [complex example from wikipedia](https://upload.wikimedia.org/wikipedia/commons/2/20/Sitemap_google.jpg), but you can create one without the screenshots, drop shadows, etc. ... just names of pages and where they flow to.
+```
+           [Login] <--> [Register]
+              |
+              |
+           [Home]
+            /   \
+           /     \
+      [Profile] [Chat (per contact)]
+```
 
 ## User Stories or Use Cases
 
-(__TODO__: write out how your application will be used through [user stories](http://en.wikipedia.org/wiki/User_story#Format) and / or [use cases](https://en.wikipedia.org/wiki/Use_case))
-
 1. as non-registered user, I can register a new account with the site
 2. as a user, I can log in to the site
-3. as a user, I can create a new grocery list
-4. as a user, I can view all of the grocery lists I've created in a single list
-5. as a user, I can add items to an existing grocery list
-6. as a user, I can cross off items in an existing grocery list
+3. as a user, I can see my contact list and choose someone to message
+4. as a user, I can send an encrypted message to another user
+5. as a user, I can view previously exchanged encrypted messages that decrypt only on my device
+6. as a user, I can update my username or password from my Profile page
 
 ## Research Topics
 
-(__TODO__: the research topics that you're planning on working on along with their point values... and the total points of research topics listed)
+* (4 points) Client-side cryptography with Web Crypto API
+    * I'm going to use `crypto.subtle` to implement ECDH (key exchange) and AES-GCM (encryption)
+    * This demonstrates secure message encryption/decryption entirely in the browser
+    * see [MDN Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API)
+* (2 points) Socket.io for real-time messaging
+    * I'm using Socket.io to enable instant message delivery without page refresh
+    * This creates a more responsive chat experience
+    * see [Socket.io Documentation](https://socket.io/docs/v4/)
+* (2 points) Tailwind CSS
+    * I'm using Tailwind for responsive layout and consistent styling
+    * Will customize the default theme for a unique look
+    * see [TailwindCSS Documentation](https://tailwindcss.com/docs)
+* (3 points) Unit testing with Jest
+    * I'm using Jest to test encryption/decryption functions and database operations
+    * Will include at least 4 unit tests
+    * see [Jest Testing Framework](https://jestjs.io/docs/getting-started)
 
-* (5 points) Integrate user authentication
-    * I'm going to be using passport for user authentication
-    * And account has been made for testing; I'll email you the password
-    * see <code>cs.nyu.edu/~jversoza/ait-final/register</code> for register page
-    * see <code>cs.nyu.edu/~jversoza/ait-final/login</code> for login page
-* (4 points) Perform client side form validation using a JavaScript library
-    * see <code>cs.nyu.edu/~jversoza/ait-final/my-form</code>
-    * if you put in a number that's greater than 5, an error message will appear in the dom
-* (5 points) vue.js
-    * used vue.js as the frontend framework; it's a challenging library to learn, so I've assigned it 5 points
-
-10 points total out of 8 required points (___TODO__: addtional points will __not__ count for extra credit)
-
+11 points total out of 10 required points
 
 ## [Link to Initial Main Project File](app.mjs) 
 
-(__TODO__: create a skeleton Express application with a package.json, app.mjs, views folder, etc. ... and link to your initial app.mjs)
-
 ## Annotations / References Used
 
-(__TODO__: list any tutorials/references/etc. that you've based your code off of)
-
-1. [passport.js authentication docs](http://passportjs.org/docs) - (add link to source code that was based on this)
-2. [tutorial on vue.js](https://vuejs.org/v2/guide/) - (add link to source code that was based on this)
-
+1. [MDN Web Docs – Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) - for ECDH and AES-GCM implementation
+2. [Socket.io Documentation](https://socket.io/docs/v4/) - for real-time messaging
+3. [Mongoose Documentation](https://mongoosejs.com/docs/) - for schema design
+4. [TailwindCSS Documentation](https://tailwindcss.com/docs) - for styling
+5. [Jest Testing Framework](https://jestjs.io/docs/getting-started) - for unit testing
