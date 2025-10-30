@@ -20,8 +20,7 @@ An Example User:
 {
   username: "alice",
   passwordHash: "<bcrypt hash>",
-  publicKey: "-----BEGIN PUBLIC KEY----- ...",
-  createdAt: ISODate("2025-10-29T10:00:00Z")
+  publicKey: "-----BEGIN PUBLIC KEY----- ..."
 }
 ```
 
