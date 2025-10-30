@@ -70,7 +70,7 @@ An Example Message:
       [Profile] [Chat (per contact)]
 ```
 
-## User Stories or Use Cases
+## User Story
 
 1. as non-registered user, I can register a new account with the site
 2. as a user, I can log in to the site
