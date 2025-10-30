@@ -42,23 +42,23 @@ An Example Message:
 
 /register - page for user registration
 
-![register](documentation/wireframes/register.jpg)
+![register](documentation/register.jpg)
 
 /login - page for user login
 
-![login](documentation/wireframes/login.jpg)
+![login](documentation/login.jpg)
 
 /home - page showing contact list
 
-![home](documentation/wireframes/home.jpg)
+![home](documentation/home.jpg)
 
 /chat/:username - page for chatting with a specific user
 
-![chat](documentation/wireframes/chat.jpg)
+![chat](documentation/chat.jpg)
 
 /profile - page for editing user profile
 
-![profile](documentation/wireframes/profile.jpg)
+![profile](documentation/profile.jpg)
 
 ## Site map
 ```
