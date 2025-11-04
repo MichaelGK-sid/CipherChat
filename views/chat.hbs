@@ -1,0 +1,26 @@
+<div class="chat-container">
+  <div class="chat-header">
+    <div class="chat-contact-info">
+      <div class="contact-avatar"></div>
+      <span class="chat-contact-name">{{username}}</span>
+    </div>
+    <a href="/home" class="home-link">Home</a>
+  </div>
+
+  <div class="chat-messages">
+    {{#each messages}}
+    <div class="message {{#if this.isMine}}message-mine{{else}}message-theirs{{/if}}">
+      <div class="message-bubble">
+        {{this.text}}
+      </div>
+    </div>
+    {{/each}}
+  </div>
+
+  <div class="chat-input-container">
+    <form action="/chat/{{username}}/send" method="POST" class="chat-form">
+      <input type="text" name="message" placeholder="Type a message..." class="chat-input" required />
+      <button type="submit" class="send-button">Send</button>
+    </form>
+  </div>
+</div>

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost/cipherChat';
+const mongoURI = process.env.DSN || 'mongodb://localhost/cipherChat';
 
 mongoose.connect(mongoURI)
   .then(() => console.log('MongoDB connected successfully'))
@@ -16,6 +16,7 @@ const UserSchema = new mongoose.Schema({
   },
   passwordHash: {type: String, required: true},
   publicKey: {type: String, required: true},
+  createdAt: {type: Date, default: Date.now}
 
 });
 
@@ -25,14 +26,12 @@ const MessageSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
-    // Reference to the User who sent the message
   },
 
   recipient: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
-    // Reference to the User who receives the message
   },
 
   ciphertext: {type: String,required: true},
@@ -42,6 +41,10 @@ const MessageSchema = new mongoose.Schema({
   timestamp: {
     type: Date,
     default: Date.now
+  },
+  read: {
+    type: Boolean,
+    default: false
   }
 });
 

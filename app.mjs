@@ -71,7 +71,6 @@ app.post('/login', (req, res) => {
 });
 
 app.get('/home', (req, res) => {
-  // TODO: Get actual contacts from database
   const contacts = [
     { username: 'Alice', lastMessageTime: '7:43 PM', hasUnread: true },
     { username: 'Bob', lastMessageTime: '2:18 PM', hasUnread: true },
@@ -85,12 +84,25 @@ app.get('/home', (req, res) => {
 });
 
 app.get('/home/search', (req, res) => {
-  // TODO: Implement search functionality
   res.redirect('/home');
 });
 
 app.get('/chat/:username', (req, res) => {
-  res.send(`Chat with ${req.params.username} - To be implemented`);
+  const messages = [
+    { text: 'Hey, how are you?', isMine: false },
+    { text: 'I\'m good! How about you?', isMine: true },
+    { text: 'Doing great, thanks for asking!', isMine: false },
+    { text: 'That\'s awesome to hear', isMine: true },
+    { text: 'What are you up to today?', isMine: false }
+  ];
+  res.render('chat', { 
+    username: req.params.username,
+    messages: messages 
+  });
+});
+
+app.post('/chat/:username/send', (req, res) => {
+  res.redirect(`/chat/${req.params.username}`);
 });
 
 app.get('/profile', (req, res) => {
