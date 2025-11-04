@@ -1,6 +1,8 @@
 import './config.mjs';
 import express from 'express'
 import mongoose from 'mongoose'
+import session from 'express-session';
+import { User, Message } from './db.mjs';
 
 import path from 'path'
 import { fileURLToPath } from 'url';
@@ -11,6 +13,12 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 24 * 60 * 60 * 1000 }
+}));
 
 app.engine('hbs', engine({ 
   extname: '.hbs',
@@ -26,14 +34,14 @@ mongoose.connect(mongoURI)
   .then(() => console.log('MongoDB connected successfully'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-const PersonSchema = new mongoose.Schema({
-  name: String,
-  age: Number
-});
+// const PersonSchema = new mongoose.Schema({
+//   name: String,
+//   age: Number
+// });
 
-const Person = mongoose.model('Person', PersonSchema);
-const mike = await Person.findOne({ name: 'Michael' });
-console.log(mike);
+// const Person = mongoose.model('Person', PersonSchema);
+// const mike = await Person.findOne({ name: 'Michael' });
+// console.log(mike);
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
@@ -44,23 +52,63 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 
 // Basic route placeholders
+
+// Middleware to check if user is logged in
+function requireLogin(req, res, next) {
+  if (!req.session.userId) {
+    return res.redirect('/login');
+  }
+  next();
+}
+
 app.get('/', (req, res) => {
-  res.send(mike.name + ' is ' + mike.age + ' years old.');
+  if (req.session.userId) {
+    res.redirect('/home');
+  } else {
+    res.redirect('/login');
+  }
 });
 
-// TODO: Add routes for:
-// - /register (GET, POST)
-// - /login (GET, POST)
-// - /home (GET)
-// - /chat/:username (GET)
-// - /profile (GET, POST)
 app.get('/register', (req, res) => {
   res.render('register');
 });
 
-app.post('/register', (req, res) => {
-  res.redirect(req.body.username + "'s password is " + req.body.password);
+app.post('/register', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.redirect('/register?error=Username already exists');
+    }
+
+    // For now, generate a dummy public key (you'll replace this with real crypto later)
+    const publicKey = 'dummy_public_key_for_now' + Date.now();
+
+    // Create new user
+    const user = new User({
+      username,
+      passwordHash: password, // Not hashed yet - just storing plain text for now
+      publicKey
+    });
+
+    await user.save();
+
+    // Log them in automatically
+    req.session.userId = user._id;
+    req.session.username = user.username;
+
+    res.redirect('/home');
+  } catch (err) {
+    console.error(err);
+    res.redirect('/register');
+  }
 });
+
+// Login routes
+app.get('/login', (req, res) => {
+  res.render('login', { error: req.query.error });
+});
+
 
 app.get('/login', (req, res) => {
   res.render('login');
