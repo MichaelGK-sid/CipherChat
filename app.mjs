@@ -1,6 +1,6 @@
 import './config.mjs';
 import express from 'express'
-import mongoose from 'mongoose'
+// import mongoose from 'mongoose'
 
 import path from 'path'
 import { fileURLToPath } from 'url';
@@ -9,19 +9,19 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const mongoURI = process.env.DSN
-mongoose.connect(mongoURI)
-  .then(() => console.log('MongoDB connected successfully'))
-  .catch(err => console.error('MongoDB connection error:', err));
+// const mongoURI = process.env.DSN
+// mongoose.connect(mongoURI)
+//   .then(() => console.log('MongoDB connected successfully'))
+//   .catch(err => console.error('MongoDB connection error:', err));
 
-const PersonSchema = new mongoose.Schema({
-  name: String,
-  age: Number
-});
+// const PersonSchema = new mongoose.Schema({
+//   name: String,
+//   age: Number
+// });
 
-const Person = mongoose.model('Person', PersonSchema);
-const mike = await Person.findOne({ name: 'Michael' });
-console.log(mike);
+// const Person = mongoose.model('Person', PersonSchema);
+// const mike = await Person.findOne({ name: 'Michael' });
+// console.log(mike);
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
@@ -33,7 +33,7 @@ app.set('view engine', 'hbs');
 
 // Basic route placeholders
 app.get('/', (req, res) => {
-  res.send(mike.name + " is " + mike.age + " years old.");
+  res.send('Welcome to CipherChat!');
 });
 
 // TODO: Add routes for:
