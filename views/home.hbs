@@ -1,0 +1,26 @@
+<div class="home-container">
+  <div class="home-header">
+    <form action="/home/search" method="GET" class="search-form">
+      <input type="text" name="query" placeholder="Search contacts..." class="search-input" />
+      <button type="submit" class="search-button">
+        <span class="search-icon">🔍</span>
+      </button>
+    </form>
+    <a href="/profile" class="profile-link">Profile</a>
+  </div>
+
+  <div class="contacts-list">
+    {{#each contacts}}
+    <a href="/chat/{{this.username}}" class="contact-item">
+      <div class="contact-left">
+        <div class="contact-avatar"></div>
+        <span class="contact-name">{{this.username}}</span>
+      </div>
+      <div class="contact-right">
+        <span class="contact-status {{#if this.hasUnread}}unread{{/if}}"></span>
+        <span class="contact-time">{{this.lastMessageTime}}</span>
+      </div>
+    </a>
+    {{/each}}
+  </div>
+</div>
