@@ -34,14 +34,6 @@ mongoose.connect(mongoURI)
   .then(() => console.log('MongoDB connected successfully'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// const PersonSchema = new mongoose.Schema({
-//   name: String,
-//   age: Number
-// });
-
-// const Person = mongoose.model('Person', PersonSchema);
-// const mike = await Person.findOne({ name: 'Michael' });
-// console.log(mike);
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
@@ -51,7 +43,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 
-// Basic route placeholders
 
 // Middleware to check if user is logged in
 function requireLogin(req, res, next) {
@@ -146,11 +137,11 @@ app.get('/logout', (req, res) => {
 app.get('/home', (req, res) => {
   const contacts = [
     { username: 'Alice', lastMessageTime: '7:43 PM', hasUnread: true },
-    // { username: 'Bob', lastMessageTime: '2:18 PM', hasUnread: true },
-    // { username: 'Charlie', lastMessageTime: '1:01 PM', hasUnread: true },
-    // { username: 'David', lastMessageTime: '2:15 PM', hasUnread: false },
-    // { username: 'Eve', lastMessageTime: 'Oct 11', hasUnread: true },
-    // { username: 'Frank', lastMessageTime: 'Oct 12', hasUnread: false },
+    { username: 'Bob', lastMessageTime: '2:18 PM', hasUnread: true },
+    { username: 'Charlie', lastMessageTime: '1:01 PM', hasUnread: true },
+    { username: 'David', lastMessageTime: '2:15 PM', hasUnread: false },
+    { username: 'Eve', lastMessageTime: 'Oct 11', hasUnread: true },
+    { username: 'Frank', lastMessageTime: 'Oct 12', hasUnread: false },
     { username: 'Grace', lastMessageTime: '2:00 AM', hasUnread: true }
   ];
   res.render('home', { contacts });
