@@ -130,7 +130,7 @@ a:hover {
 }
 
 /* Responsive design */
-@media (max-width: 600px) {
+/* @media (max-width: 600px) {
   main, body > h2, body > form {
     margin: 2rem 1rem;
     padding: 2rem 1.5rem;
@@ -143,7 +143,7 @@ a:hover {
   header .logo h1 {
     font-size: 1.5rem;
   }
-}
+} */
 
 
 
@@ -199,12 +199,12 @@ a:hover {
   gap: 1rem;
 }
 
-@media (max-width: 600px) {
+/* @media (max-width: 600px) {
   .info-item {
     flex-direction: column;
     gap: 0.5rem;
   }
-}
+} */
 
 .profile-container {
   max-width: 900px;
@@ -335,7 +335,7 @@ a:hover {
   z-index: 1;
 }
 
-@media (max-width: 600px) {
+/* @media (max-width: 600px) {
 
 
   .profile-link {
@@ -360,7 +360,7 @@ a:hover {
   .contact-item {
     padding: 1rem;
   }
-}
+} */
 
 
 

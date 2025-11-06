@@ -3,6 +3,9 @@ import express from 'express'
 import mongoose from 'mongoose'
 import session from 'express-session';
 import { User, Message } from './db.mjs';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+
 
 import path from 'path'
 import { fileURLToPath } from 'url';
@@ -214,5 +217,22 @@ app.post('/profile/password', requireLogin, async (req, res) => {
 });
 
 
+const httpServer = createServer(app);
+const io = new Server(httpServer);
 
-app.listen(process.env.PORT || 3001);
+io.on('connection', (socket) => {
+  console.log('User connected:', socket.id);
+  
+  socket.on('send_message', (data) => {
+    console.log('Message received:', data);
+    io.emit('receive_message', data);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
+
+httpServer.listen(process.env.PORT || 3001, '0.0.0.0', () => {
+  console.log(`Server running on port ${process.env.PORT || 3001}`);
+});

@@ -7,7 +7,7 @@
     <a href="/home" class="home-link">Home</a>
   </div>
 
-  <div class="chat-messages">
+  <div class="chat-messages" id="messages">
     {{#each messages}}
     <div class="message {{#if this.isMine}}message-mine{{else}}message-theirs{{/if}}">
       <div class="message-bubble">
@@ -18,9 +18,39 @@
   </div>
 
   <div class="chat-input-container">
-    <form action="/chat/{{username}}/send" method="POST" class="chat-form">
-      <input type="text" name="message" placeholder="Type a message..." class="chat-input" required />
+    <form id="chat-form" class="chat-form">
+      <input type="text" id="message-input" placeholder="Type a message..." class="chat-input" required />
       <button type="submit" class="send-button">Send</button>
     </form>
   </div>
 </div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  const form = document.getElementById('chat-form');
+  const input = document.getElementById('message-input');
+  const messagesDiv = document.getElementById('messages');
+
+  // Send message
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (input.value) {
+      socket.emit('send_message', {
+        text: input.value,
+        username: '{{username}}',
+        sender: 'currentUser' // TODO: Replace with actual session user
+      });
+      input.value = '';
+    }
+  });
+
+  // Receive message
+  socket.on('receive_message', (data) => {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message message-theirs'; // TODO: Check if mine or theirs
+    messageDiv.innerHTML = `<div class="message-bubble">${data.text}</div>`;
+    messagesDiv.appendChild(messageDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  });
+</script>
