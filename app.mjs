@@ -5,6 +5,7 @@ import session from 'express-session';
 import { User, Message } from './db.mjs';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import bcrypt from 'bcrypt';
 
 
 import path from 'path'
@@ -74,20 +75,17 @@ app.post('/register', async (req, res) => {
     if (existingUser) {
       return res.redirect('/register?error=Username already exists');
     }
-
-    // For now, generate a dummy public key (you'll replace this with real crypto later)
+    const hashRounds = 10;
+    const passwordHash = await bcrypt.hash(password, hashRounds);
     const publicKey = 'dummy_public_key_for_now' + Date.now();
 
-    // Create new user
     const user = new User({
       username,
-      passwordHash: password, // Not hashed yet - just storing plain text for now
+      passwordHash: passwordHash, 
       publicKey
     });
 
     await user.save();
-
-    // Log them in automatically
     req.session.userId = user._id;
     req.session.username = user.username;
 
@@ -98,25 +96,23 @@ app.post('/register', async (req, res) => {
   }
 });
 
-// Login routes
+
+
 app.get('/login', (req, res) => {
   res.render('login', { error: req.query.error });
 });
-
-
 
 app.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // Find user
     const user = await User.findOne({ username });
     if (!user) {
       return res.redirect('/login?error=Invalid username or password');
     }
 
-    // Check password (not hashed yet)
-    if (user.passwordHash !== password) {
+    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+    if (!isValidPassword) {
       return res.redirect('/login?error=Invalid username or password');
     }
 
@@ -298,11 +294,14 @@ app.post('/profile/username', requireLogin, async (req, res) => {
 
 app.post('/profile/password', requireLogin, async (req, res) => {
   try {
+    const hashRounds = 10;
+    const newPasswordHash = await bcrypt.hash(req.body.password, hashRounds);
+    
     // Generate new public key when password changes
     const newPublicKey = 'dummy-public-key-' + Date.now();
     
     await User.findByIdAndUpdate(req.session.userId, { 
-      passwordHash: req.body.password, 
+      passwordHash: newPasswordHash,  
       publicKey: newPublicKey 
     });
     
