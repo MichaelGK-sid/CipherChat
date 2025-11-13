@@ -27,30 +27,71 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-  const socket = io();
-  const form = document.getElementById('chat-form');
-  const input = document.getElementById('message-input');
-  const messagesDiv = document.getElementById('messages');
-
-  // Send message
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    if (input.value) {
-      socket.emit('send_message', {
-        text: input.value,
-        username: '{{username}}',
-        sender: 'currentUser' // TODO: Replace with actual session user
+  document.addEventListener('DOMContentLoaded', function() {
+    const socket = io();
+    const currentUserId = '{{currentUserId}}';
+    const recipientId = '{{recipientId}}';
+    
+    console.log('Current User:', currentUserId);
+    console.log('Recipient:', recipientId);
+    
+    // Register this user with their socket
+    socket.emit('register_user', currentUserId);
+    
+    // Listen for incoming messages
+    socket.on('receive_message', (data) => {
+      console.log('Received message:', data);
+      if (data.senderId === recipientId) {
+        addMessageToChat(data.ciphertext, false);
+      }
+    });
+    
+    // Listen for message sent confirmation
+    socket.on('message_sent', (data) => {
+      console.log('Message sent successfully:', data);
+    });
+    
+    // Handle form submit
+    const chatForm = document.getElementById('chat-form');
+    if (chatForm) {
+      chatForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        sendMessage();
       });
-      input.value = '';
     }
-  });
-
-  // Receive message
-  socket.on('receive_message', (data) => {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = 'message message-theirs'; // TODO: Check if mine or theirs
-    messageDiv.innerHTML = `<div class="message-bubble">${data.text}</div>`;
-    messagesDiv.appendChild(messageDiv);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    
+    // Send message function
+    function sendMessage() {
+      const input = document.getElementById('message-input');
+      const message = input.value.trim();
+      
+      if (message) {
+        console.log('Sending message:', message);
+        
+        socket.emit('send_message', {
+          senderId: currentUserId,
+          recipientId: recipientId,
+          ciphertext: message,
+          iv: 'dummy-iv-' + Date.now()
+        });
+        
+        addMessageToChat(message, true);
+        input.value = '';
+      }
+    }
+    
+    function addMessageToChat(text, isMine) {
+      const messagesContainer = document.getElementById('messages');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message ' + (isMine ? 'message-mine' : 'message-theirs');
+      
+      const bubbleDiv = document.createElement('div');
+      bubbleDiv.className = 'message-bubble';
+      bubbleDiv.textContent = text;
+      
+      messageDiv.appendChild(bubbleDiv);
+      messagesContainer.appendChild(messageDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
   });
 </script>

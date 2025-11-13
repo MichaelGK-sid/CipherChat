@@ -137,45 +137,107 @@ app.get('/logout', (req, res) => {
 });
 
 
-app.get('/home', (req, res) => {
-  const contacts = [
-    { username: 'Alice', lastMessageTime: '7:43 PM', hasUnread: true },
-    { username: 'Bob', lastMessageTime: '2:18 PM', hasUnread: true },
-    { username: 'Charlie', lastMessageTime: '1:01 PM', hasUnread: true },
-    { username: 'David', lastMessageTime: '2:15 PM', hasUnread: false },
-    { username: 'Eve', lastMessageTime: 'Oct 11', hasUnread: true },
-    { username: 'Frank', lastMessageTime: 'Oct 12', hasUnread: false },
-    { username: 'Grace', lastMessageTime: '2:00 AM', hasUnread: true }
-  ];
-  res.render('home', { contacts });
+app.get('/home', requireLogin, async (req, res) => {
+  try {
+    // Get all users except the current user
+    const contacts = await User.find({ 
+      _id: { $ne: req.session.userId } 
+    }).select('username').lean();
+    
+    // Get last message for each contact
+    const contactsWithMessages = await Promise.all(
+      contacts.map(async (contact) => {
+        const lastMessage = await Message.findOne({
+          $or: [
+            { sender: req.session.userId, recipient: contact._id },
+            { sender: contact._id, recipient: req.session.userId }
+          ]
+        }).sort({ timestamp: -1 }).lean();
+        
+        return {
+          username: contact.username,
+          lastMessageTime: lastMessage 
+            ? formatTimestamp(lastMessage.timestamp) 
+            : 'No messages',
+          hasUnread: false  // TODO: implement unread logic later
+        };
+      })
+    );
+    
+    res.render('home', { 
+      contacts: contactsWithMessages,
+      currentUsername: req.session.username 
+    });
+  } catch (err) {
+    console.error(err);
+    res.render('home', { contacts: [] });
+  }
 });
+
+// Helper function to format timestamps
+function formatTimestamp(date) {
+  const now = new Date();
+  const messageDate = new Date(date);
+  const diffTime = now - messageDate;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) {
+    // Today - show time
+    return messageDate.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    });
+  } else if (diffDays < 7) {
+    // This week - show day
+    return messageDate.toLocaleDateString('en-US', { weekday: 'short' });
+  } else {
+    // Older - show date
+    return messageDate.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  }
+}
 
 app.get('/home/search', (req, res) => {
   res.redirect('/home');
 });
 
-app.get('/chat/:username', (req, res) => {
-  const messages = [
-    { text: 'Hey, how are you?', isMine: false },
-    { text: 'I\'m good! How about you?', isMine: true },
-    { text: 'Doing great, thanks for asking!', isMine: false },
-    { text: 'That\'s awesome to hear', isMine: true },
-    { text: 'What are you up to today?', isMine: false },
-    { text: 'Hey, how are you?', isMine: false },
-    { text: 'I\'m good! How about you?', isMine: true },
-    { text: 'Doing great, thanks for asking!', isMine: false },
-    { text: 'That\'s awesome to hear', isMine: true },
-    { text: 'What are you up to today?', isMine: false },
-    { text: 'Hey, how are you?', isMine: false },
-    { text: 'I\'m good! How about you?', isMine: true },
-    { text: 'Doing great, thanks for asking!', isMine: false },
-    { text: 'That\'s awesome to hear', isMine: true },
-    { text: 'What are you up to today?', isMine: false }
-  ];
-  res.render('chat', { 
-    username: req.params.username,
-    messages: messages 
-  });
+app.get('/chat/:username', requireLogin, async (req, res) => {
+  try {
+    // Find the other user
+    const otherUser = await User.findOne({ username: req.params.username });
+    if (!otherUser) {
+      return res.redirect('/home');
+    }
+    
+    // Get messages between current user and other user
+    const messages = await Message.find({
+      $or: [
+        { sender: req.session.userId, recipient: otherUser._id },
+        { sender: otherUser._id, recipient: req.session.userId }
+      ]
+    }).sort({ timestamp: 1 });
+    
+    // Format messages for template
+    const formattedMessages = messages.map(msg => ({
+      text: msg.ciphertext,
+      isMine: msg.sender.toString() === req.session.userId.toString(),
+      iv: msg.iv,
+      timestamp: msg.timestamp
+    }));
+    
+    res.render('chat', { 
+      username: req.params.username,
+      recipientId: otherUser._id.toString(),
+      currentUserId: req.session.userId.toString(),
+      messages: formattedMessages 
+    });
+  } catch (err) {
+    console.error(err);
+    res.redirect('/home');
+  }
 });
 
 app.post('/chat/:username/send', (req, res) => {
@@ -217,19 +279,67 @@ app.post('/profile/password', requireLogin, async (req, res) => {
 });
 
 
+// Socket.io setup
 const httpServer = createServer(app);
 const io = new Server(httpServer);
+
+// Store socket-to-user mappings
+const userSockets = new Map(); // userId -> socketId
 
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
   
-  socket.on('send_message', (data) => {
-    console.log('Message received:', data);
-    io.emit('receive_message', data);
+  // User identifies themselves when connecting
+  socket.on('register_user', (userId) => {
+    userSockets.set(userId, socket.id);
+    socket.userId = userId;
+    console.log(`User ${userId} registered with socket ${socket.id}`);
+  });
+  
+  // Handle sending messages
+  socket.on('send_message', async (data) => {
+    try {
+      const { senderId, recipientId, ciphertext, iv } = data;
+      
+      // Save message to database
+      const message = new Message({
+        sender: senderId,
+        recipient: recipientId,
+        ciphertext: ciphertext,
+        iv: iv,
+        timestamp: new Date()
+      });
+      await message.save();
+      
+      // Send to recipient if they're online
+      const recipientSocketId = userSockets.get(recipientId);
+      if (recipientSocketId) {
+        io.to(recipientSocketId).emit('receive_message', {
+          senderId,
+          ciphertext,
+          iv,
+          timestamp: message.timestamp
+        });
+      }
+      
+      // Also send back to sender for confirmation
+      socket.emit('message_sent', {
+        messageId: message._id,
+        timestamp: message.timestamp
+      });
+      
+      console.log(`Message from ${senderId} to ${recipientId} saved`);
+    } catch (err) {
+      console.error('Error saving message:', err);
+      socket.emit('message_error', { error: 'Failed to send message' });
+    }
   });
 
   socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
+    if (socket.userId) {
+      userSockets.delete(socket.userId);
+      console.log(`User ${socket.userId} disconnected`);
+    }
   });
 });
 
