@@ -1,11 +1,12 @@
 <div class="home-container">
   <div class="home-header">
     <form action="/home/search" method="GET" class="search-form">
-      <input type="text" name="query" placeholder="Search contacts..." class="search-input" />
+      <input type="text" name="q" placeholder="Search contacts..." value="{{searchQuery}}"/>
       <button type="submit" class="search-button">
         <span class="search-icon">🔍</span>
       </button>
     </form>
+
     <a href="/profile" class="profile-link">Profile</a>
   </div>
 

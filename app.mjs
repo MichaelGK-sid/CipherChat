@@ -200,8 +200,43 @@ function formatTimestamp(date) {
   }
 }
 
-app.get('/home/search', (req, res) => {
-  res.redirect('/home');
+app.get('/home/search', requireLogin, async (req, res) => {
+  try {
+    const searchQuery = req.query.q || '';
+    
+    const contacts = await User.find({ 
+      _id: { $ne: req.session.userId },
+      username: { $regex: searchQuery, $options: 'i' }  // Case-insensitive search
+    }).select('username').lean();
+    
+    const contactsWithMessages = await Promise.all(
+      contacts.map(async (contact) => {
+        const lastMessage = await Message.findOne({
+          $or: [
+            { sender: req.session.userId, recipient: contact._id },
+            { sender: contact._id, recipient: req.session.userId }
+          ]
+        }).sort({ timestamp: -1 }).lean();
+        
+        return {
+          username: contact.username,
+          lastMessageTime: lastMessage 
+            ? formatTimestamp(lastMessage.timestamp) 
+            : 'No messages',
+          hasUnread: false
+        };
+      })
+    );
+    
+    res.render('home', { 
+      contacts: contactsWithMessages,
+      currentUsername: req.session.username,
+      searchQuery 
+    });
+  } catch (err) {
+    console.error(err);
+    res.render('home', { contacts: [], searchQuery: '' });
+  }
 });
 
 app.get('/chat/:username', requireLogin, async (req, res) => {
