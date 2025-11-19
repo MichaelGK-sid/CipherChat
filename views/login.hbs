@@ -1,6 +1,6 @@
 <main>
   <h2>Login</h2>
-  <form action="/login" method="POST">
+  <form id="login-form" action="/login" method="POST">
     <label for="username">Username:</label>
     <input type="text" id="username" name="username" required />
 
@@ -11,3 +11,71 @@
   </form>
   <p>Don't have an account? <a href="/register">Register here</a>.</p>
 </main>
+
+<script src="/js/crypto.js"></script>
+<script>
+  const cryptoHandler = new CryptoHandler();
+  
+  document.getElementById('login-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    
+    // First, do the normal login via fetch to get userId
+    try {
+      const response = await fetch('/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        const userId = data.userId;
+        
+        // Check if keys exist in localStorage
+        const existingKeys = await cryptoHandler.loadKeysFromLocalStorage(userId);
+        
+        if (!existingKeys) {
+          const keyCheckResponse = await fetch(`/api/user/${username}/public-key`);
+          const keyCheckData = await keyCheckResponse.json();
+          
+          if (keyCheckData.success && keyCheckData.publicKey && !keyCheckData.publicKey.startsWith('dummy')) {
+            // User has keys in DB but not in localStorage, so wrong browser
+            alert('Your encryption keys are not found on this browser. Please log in from the browser you first used to register, or clear your account and re-register from this browser.');
+            return; 
+          }
+          
+          // First time login - generate new keys
+          console.log("First login - generating keys...");
+          await cryptoHandler.generateKeyPair();
+          const publicKeyBase64 = await cryptoHandler.saveKeysToLocalStorage(userId);
+          
+          // Send public key to server
+          await fetch('/api/update-public-key', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ publicKey: publicKeyBase64 })
+          });
+          
+          console.log("Keys generated and public key sent to server");
+        } else {
+          console.log("Keys loaded from localStorage");
+        }
+        
+        window.location.href = '/home';
+      } else {
+        alert(data.error || 'Login failed');
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Login failed. Please try again.");
+    }
+  });
+</script>

@@ -6,12 +6,11 @@
     </div>
     <a href="/home" class="home-link">Home</a>
   </div>
-
   <div class="chat-messages" id="messages">
     {{#each messages}}
     <div class="message {{#if this.isMine}}message-mine{{else}}message-theirs{{/if}}">
-      <div class="message-bubble">
-        {{this.text}}
+      <div class="message-bubble" data-ciphertext="{{this.text}}" data-iv="{{this.iv}}">
+        [Encrypted]
       </div>
     </div>
     {{/each}}
@@ -26,57 +25,116 @@
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
+<script src="/js/crypto.js"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', async function() {
     const socket = io();
     const currentUserId = '{{currentUserId}}';
     const recipientId = '{{recipientId}}';
+    const recipientUsername = '{{username}}';
+    
+    const cryptoHandler = new CryptoHandler();
+    let sharedAESKey = null;
     
     console.log('Current User:', currentUserId);
     console.log('Recipient:', recipientId);
     
-    // Register this user with their socket
+    await cryptoHandler.loadKeysFromLocalStorage(currentUserId);
+    
+    if (!cryptoHandler.keyPair) {
+      alert('Your encryption keys are not set up. Please logout and login again.');
+      return;
+    }
+    
+    // Fetch recipient's public key and derive shared secret
+    try {
+      const response = await fetch(`/api/user/${recipientUsername}/public-key`);
+      const data = await response.json();
+      
+      if (data.success) {
+        const recipientPublicKey = await cryptoHandler.importPublicKey(data.publicKey);
+        sharedAESKey = await cryptoHandler.deriveAESKey(cryptoHandler.keyPair.privateKey, recipientPublicKey);
+        console.log('Shared encryption key derived successfully');
+      } else {
+        alert('Could not fetch recipient\'s public key');
+        return;
+      }
+    } catch (error) {
+      console.error('Error setting up encryption:', error);
+      alert('Encryption setup failed');
+      return;
+    }
+
+    // Decrypt existing messages
+    const messageElements = document.querySelectorAll('.message-bubble');
+    for (const msgEl of messageElements) {
+      const ciphertext = msgEl.getAttribute('data-ciphertext');
+      const iv = msgEl.getAttribute('data-iv');
+      
+      if (ciphertext && iv) {
+        try {
+          const decrypted = await cryptoHandler.decryptMessage(ciphertext, iv, sharedAESKey);
+          msgEl.textContent = decrypted;
+        } catch (error) {
+          console.error('Decryption failed:', error);
+          msgEl.textContent = '[Decryption failed]';
+        }
+      }
+    }
+    
     socket.emit('register_user', currentUserId);
     
-    // Listen for incoming messages
-    socket.on('receive_message', (data) => {
+    // Handle incoming messages
+    socket.on('receive_message', async (data) => {
       console.log('Received message:', data);
       if (data.senderId === recipientId) {
-        addMessageToChat(data.ciphertext, false);
+        try {
+          const decrypted = await cryptoHandler.decryptMessage(data.ciphertext, data.iv, sharedAESKey);
+          addMessageToChat(decrypted, false);
+        } catch (error) {
+          console.error('Failed to decrypt incoming message:', error);
+          addMessageToChat('[Decryption failed]', false);
+        }
       }
     });
     
-    // Listen for message sent confirmation
+
     socket.on('message_sent', (data) => {
       console.log('Message sent successfully:', data);
     });
     
-    // Handle form submit
+    // Handle message sending
     const chatForm = document.getElementById('chat-form');
     if (chatForm) {
-      chatForm.addEventListener('submit', function(e) {
+      chatForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        sendMessage();
+        await sendMessage();
       });
     }
     
-    // Send message function
-    function sendMessage() {
+    async function sendMessage() {
       const input = document.getElementById('message-input');
       const message = input.value.trim();
       
-      if (message) {
-        console.log('Sending message:', message);
+      if (message && sharedAESKey) {
+        console.log('Encrypting and sending message:', message);
         
-        socket.emit('send_message', {
-          senderId: currentUserId,
-          recipientId: recipientId,
-          ciphertext: message,
-          iv: 'dummy-iv-' + Date.now()
-        });
-        
-        addMessageToChat(message, true);
-        input.value = '';
+        try {
+          const encrypted = await cryptoHandler.encryptMessage(message, sharedAESKey);
+          
+          socket.emit('send_message', {
+            senderId: currentUserId,
+            recipientId: recipientId,
+            ciphertext: encrypted.ciphertext,
+            iv: encrypted.iv
+          });
+          
+          addMessageToChat(message, true);
+          input.value = '';
+        } catch (error) {
+          console.error('Encryption failed:', error);
+          alert('Failed to encrypt message');
+        }
       }
     }
     

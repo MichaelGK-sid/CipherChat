@@ -86,10 +86,9 @@ app.post('/register', async (req, res) => {
     });
 
     await user.save();
-    req.session.userId = user._id;
-    req.session.username = user.username;
-
-    res.redirect('/home');
+    
+    // Redirect to login so that user can log in and generate actual keys
+    res.redirect('/login'); 
   } catch (err) {
     console.error(err);
     res.redirect('/register');
@@ -105,25 +104,28 @@ app.get('/login', (req, res) => {
 app.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-
     const user = await User.findOne({ username });
+    
     if (!user) {
-      return res.redirect('/login?error=Invalid username or password');
+      return res.json({ success: false, error: 'Invalid username or password' });
     }
-
+    
     const isValidPassword = await bcrypt.compare(password, user.passwordHash);
     if (!isValidPassword) {
-      return res.redirect('/login?error=Invalid username or password');
+      return res.json({ success: false, error: 'Invalid username or password' });
     }
 
-    // Create session
     req.session.userId = user._id;
     req.session.username = user.username;
 
-    res.redirect('/home');
+    return res.json({ 
+      success: true, 
+      userId: user._id.toString(),
+      username: user.username 
+    });
   } catch (err) {
     console.error(err);
-    res.redirect('/login?error=Login failed');
+    return res.json({ success: false, error: 'Login failed' });
   }
 });
 
@@ -170,7 +172,6 @@ app.get('/home', requireLogin, async (req, res) => {
   }
 });
 
-// Helper function to format timestamps
 function formatTimestamp(date) {
   const now = new Date();
   const messageDate = new Date(date);
@@ -178,17 +179,16 @@ function formatTimestamp(date) {
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   
   if (diffDays === 0) {
-    // Today - show time
     return messageDate.toLocaleTimeString('en-US', { 
       hour: 'numeric', 
       minute: '2-digit',
       hour12: true 
     });
-  } else if (diffDays < 7) {
-    // This week - show day
+  } 
+  else if (diffDays < 7) {
     return messageDate.toLocaleDateString('en-US', { weekday: 'short' });
-  } else {
-    // Older - show date
+  } 
+  else {
     return messageDate.toLocaleDateString('en-US', { 
       month: 'short', 
       day: 'numeric' 
@@ -312,6 +312,42 @@ app.post('/profile/password', requireLogin, async (req, res) => {
   }
 });
 
+app.post('/api/update-public-key', requireLogin, async (req, res) => {
+  try {
+    const { publicKey } = req.body;
+    
+    if (!publicKey) {
+      return res.status(400).json({ success: false, error: 'Public key required' });
+    }
+
+    // Update user's public key in database
+    await User.findByIdAndUpdate(req.session.userId, { 
+      publicKey: publicKey 
+    });
+
+    console.log(`Public key updated for user ${req.session.userId}`);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error updating public key:', err);
+    res.status(500).json({ success: false, error: 'Failed to update public key' });
+  }
+});
+
+app.get('/api/user/:username/public-key', requireLogin, async (req, res) => {
+  try {
+    const user = await User.findOne({ username: req.params.username }).select('publicKey');
+    
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+    
+    res.json({ success: true, publicKey: user.publicKey });
+  } catch (err) {
+    console.error('Error fetching public key:', err);
+    res.status(500).json({ success: false, error: 'Failed to fetch public key' });
+  }
+});
+
 
 // Socket.io setup
 const httpServer = createServer(app);
@@ -380,3 +416,5 @@ io.on('connection', (socket) => {
 httpServer.listen(process.env.PORT || 3001, '0.0.0.0', () => {
   console.log(`Server running on port ${process.env.PORT || 3001}`);
 });
+
+
