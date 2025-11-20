@@ -53,8 +53,7 @@ https://github.com/nyu-csci-ua-0467-001-002-fall-2025/final-project-MichaelGK-si
 
 ## Short description for links above
 - First: `constructor` of my custom CryptoHandler class
-- Second: `.map()` higher-order function used to transform Message documents into formatted message objects with decryption metadata
-
+- Second: `.map()` higher-order function used in different scenarios
 ## Link to github line number(s) for schemas (db.js or models folder)
 https://github.com/nyu-csci-ua-0467-001-002-fall-2025/final-project-MichaelGK-sid/blob/main/db.mjs#L10
 https://github.com/nyu-csci-ua-0467-001-002-fall-2025/final-project-MichaelGK-sid/blob/main/db.mjs#L24
