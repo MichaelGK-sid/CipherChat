@@ -23,6 +23,7 @@ https://final-project-michaelgk-sid.onrender.com/login
 
 ## URL for form 2 (for current milestone)
 https://final-project-michaelgk-sid.onrender.com/profile
+
 https://final-project-michaelgk-sid.onrender.com/home
 
 ## Special Instructions for Form 2
@@ -47,7 +48,9 @@ https://github.com/nyu-csci-ua-0467-001-002-fall-2025/final-project-MichaelGK-si
 
 ## Second link to github line number(s) for constructor, HOF, etc.
 https://github.com/nyu-csci-ua-0467-001-002-fall-2025/final-project-MichaelGK-sid/blob/main/app.mjs#L147
+
 https://github.com/nyu-csci-ua-0467-001-002-fall-2025/final-project-MichaelGK-sid/blob/main/app.mjs#L209
+
 https://github.com/nyu-csci-ua-0467-001-002-fall-2025/final-project-MichaelGK-sid/blob/main/app.mjs#L255
 
 
@@ -56,6 +59,7 @@ https://github.com/nyu-csci-ua-0467-001-002-fall-2025/final-project-MichaelGK-si
 - Second: `.map()` higher-order function used in different scenarios
 ## Link to github line number(s) for schemas (db.js or models folder)
 https://github.com/nyu-csci-ua-0467-001-002-fall-2025/final-project-MichaelGK-sid/blob/main/db.mjs#L10
+
 https://github.com/nyu-csci-ua-0467-001-002-fall-2025/final-project-MichaelGK-sid/blob/main/db.mjs#L24
 
 ## Description of research topics above with points
@@ -68,7 +72,9 @@ Total: 10 points
 ## Links to github line number(s) for research topics described above (one link per line)
 
 https://github.com/nyu-csci-ua-0467-001-002-fall-2025/final-project-MichaelGK-sid/blob/main/app.mjs#L349
+
 https://github.com/nyu-csci-ua-0467-001-002-fall-2025/final-project-MichaelGK-sid/blob/main/public/js/crypto.js
+
 https://github.com/nyu-csci-ua-0467-001-002-fall-2025/final-project-MichaelGK-sid/blob/main/documentation/test_pass.png
 
 ## Optional project notes
