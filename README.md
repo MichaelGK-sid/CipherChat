@@ -1,12 +1,12 @@
-
-
 # CipherChat
 
 ## Overview
 
 CipherChat is a small end-to-end encrypted (E2EE) web messaging application built using Express and MongoDB. It allows users to securely register, log in, and exchange encrypted messages with each other — similar in spirit to Signal or WhatsApp, but in a much smaller scope for demonstration purposes.
 
-Each user generates a public/private key pair upon registration. When one user sends a message to another, the plaintext message is encrypted in the browser using a shared secret key derived via Elliptic-Curve Diffie–Hellman (ECDH), ensuring that messages are stored encrypted on the server. Only the recipient, possessing the matching private key, can decrypt and read the message.
+Each user generates a public/private key pair upon first login. When one user sends a message to another, the plaintext message is encrypted in the browser using a shared secret key derived via Elliptic-Curve Diffie–Hellman (ECDH), ensuring that messages are stored encrypted on the server. Only the recipient, possessing the matching private key, can decrypt and read the message.
+
+CipherChat demonstrates secure client–server interaction, database modeling with Mongoose, and applied cryptography in JavaScript through the Web Crypto API.
 
 ## Data Model
 
@@ -20,7 +20,8 @@ An Example User:
 {
   username: "alice",
   passwordHash: "<bcrypt hash>",
-  publicKey: "-----BEGIN PUBLIC KEY----- ..."
+  publicKey: "-----BEGIN PUBLIC KEY----- ...",
+  createdAt: ISODate("2025-10-29T10:00:00Z")
 }
 ```
 
@@ -70,7 +71,7 @@ An Example Message:
       [Profile] [Chat (per contact)]
 ```
 
-## User Story
+## User Stories
 
 1. as non-registered user, I can register a new account with the site
 2. as a user, I can log in to the site
@@ -78,34 +79,42 @@ An Example Message:
 4. as a user, I can send an encrypted message to another user
 5. as a user, I can view previously exchanged encrypted messages that decrypt only on my device
 6. as a user, I can update my username or password from my Profile page
+7. as a user, I can search for contacts by username
 
 ## Research Topics
 
 * (3 points) Unit testing with Jest
-    * I'm using Jest to test encryption/decryption functions and database operations
-    * Will link to testing code in repository and show screen capture of tests
+    * Using Jest to test encryption/decryption functions and key derivation
+    * Includes 6 unit tests covering encryption, decryption, and ECDH key exchange
+    * Test results screenshot available in documentation folder
     * see [Jest Testing Framework](https://jestjs.io/docs/getting-started)
 * (3 points) Socket.io for real-time messaging
-    * I'm using Socket.io (server-side library) to enable instant message delivery without page refresh
-    * This creates a more responsive chat experience similar to WhatsApp
+    * Socket.io enables instant message delivery without page refresh
+    * Implements one-to-one messaging with user socket mapping
+    * Messages persist to MongoDB and deliver in real-time if recipient is online
     * see [Socket.io Documentation](https://socket.io/docs/v4/)
-* (2 points) Tailwind CSS
-    * I'm using Tailwind for responsive layout and consistent styling
-    * Will customize the default theme (not using stock configuration)
-    * see [TailwindCSS Documentation](https://tailwindcss.com/docs)
-* (3 points) Web Crypto API for client-side encryption
-    * I'm using Web Crypto API to implement ECDH key exchange and AES-GCM encryption
-    * This is a client-side cryptography implementation for end-to-end encryption
-    * Will link to encryption/decryption code and demonstrate working encrypted messaging
+* (4 points) Web Crypto API for client-side encryption
+    * Implements ECDH (P-256 curve) for key exchange and AES-GCM for message encryption
+    * Private keys stored in browser localStorage, public keys in MongoDB
+    * All encryption/decryption happens client-side - server never sees plaintext
+    * Includes key validation and browser detection warnings
     * see [MDN Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API)
 
+**Total: 10 points**
 
 ## [Link to Initial Main Project File](app.mjs) 
+
+## Known Limitations
+
+* **Private keys are stored in browser localStorage** - If you login from a different browser or device, you won't be able to decrypt old messages. This is similar to how Signal works on different devices.
+* **Key recovery is not implemented** - There is no way to recover lost keys if localStorage is cleared
+* A warning message will appear if you attempt to login from a browser that doesn't have your private key
 
 ## Annotations / References Used
 
 1. [MDN Web Docs – Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) - for ECDH and AES-GCM implementation
 2. [Socket.io Documentation](https://socket.io/docs/v4/) - for real-time messaging
 3. [Mongoose Documentation](https://mongoosejs.com/docs/) - for schema design
-4. [TailwindCSS Documentation](https://tailwindcss.com/docs) - for styling
-5. [Jest Testing Framework](https://jestjs.io/docs/getting-started) - for unit testing
+4. [Jest Testing Framework](https://jestjs.io/docs/getting-started) - for unit testing
+5. [bcrypt Documentation](https://www.npmjs.com/package/bcrypt) - for password hashing
+6. [Express-session Documentation](https://www.npmjs.com/package/express-session) - for session management

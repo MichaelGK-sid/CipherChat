@@ -58,6 +58,10 @@ describe('Key Derivation', () => {
   test('should derive same key from same inputs', () => {
     const privateKey = 'alice-private-key';
     const publicKey = 'bob-public-key';
+
+    // Obviously, this is a simulation; for real ECDH, the calculation would be different
+    // Though we do expect the same inputs to yield the same derived key
+    // Here we just hash the concatenation for testing purposes
     
     const key1 = simulateECDHKeyDerivation(privateKey, publicKey);
     const key2 = simulateECDHKeyDerivation(privateKey, publicKey);
