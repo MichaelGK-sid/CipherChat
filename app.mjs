@@ -297,12 +297,9 @@ app.post('/profile/password', requireLogin, async (req, res) => {
     const hashRounds = 10;
     const newPasswordHash = await bcrypt.hash(req.body.password, hashRounds);
     
-    // Generate new public key when password changes
-    const newPublicKey = 'dummy-public-key-' + Date.now();
     
     await User.findByIdAndUpdate(req.session.userId, { 
       passwordHash: newPasswordHash,  
-      publicKey: newPublicKey 
     });
     
     res.redirect('/profile');
