@@ -378,7 +378,7 @@ io.on('connection', (socket) => {
       });
       await message.save();
       
-      // Send to recipient if they're online
+      // Send to recipient if they're online but if not, they will get it when they reconnect
       const recipientSocketId = userSockets.get(recipientId);
       if (recipientSocketId) {
         io.to(recipientSocketId).emit('receive_message', {
