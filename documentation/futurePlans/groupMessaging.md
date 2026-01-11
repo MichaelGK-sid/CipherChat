@@ -83,3 +83,7 @@ This design:
 - Preserves all 1-to-1 security guarantees in group settings
 - Avoids complex group key management
 - Provides a strong, easy-to-reason-about foundation for group messaging
+
+
+### Sources
+The great visualization video provided was sourced from the Computerphile youtube channel, specifically this video: https://www.youtube.com/watch?v=Q0_lcKrUdWg. 
